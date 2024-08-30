@@ -27,6 +27,28 @@ void load_training_dataset(const std::string& training_dataset_path, std::vector
     }
 }
 
+void extract_texts_and_labels(const std::vector<std::vector<std::string>>& data, std::vector<std::string>& texts, std::vector<int>& labels)
+{
+    std::cout << "Extracting texts and labels...";
+
+    try
+    {
+        Timer timer;
+        timer.start();
+
+        TextProcessor::extract_texts_and_labels(data, texts, labels);
+
+        timer.stop();
+
+        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " ms]" << std::endl;
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << " [FAIL]" << std::endl;
+        std::cerr << e.what() << std::endl;
+    }
+}
+
 int main(const int argc, char const* argv[])
 {
     if (argc != 4)
@@ -62,7 +84,7 @@ int main(const int argc, char const* argv[])
     std::vector<std::string> train_texts;
     std::vector<int> train_labels;
 
-    TextProcessor::extract_texts_and_labels(training_data, train_texts, train_labels);
+    extract_texts_and_labels(training_data, train_texts, train_labels);
 
     // for (unsigned int i{1}; const auto& text : train_texts)
     // {
