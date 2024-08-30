@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-void load_training_dataset(const std::string& training_dataset_path)
+void load_training_dataset(const std::string& training_dataset_path, std::vector<std::vector<std::string>>& training_data)
 {
     std::cout << "Loading training dataset...";
 
@@ -12,11 +12,11 @@ void load_training_dataset(const std::string& training_dataset_path)
         Timer timer;
         timer.start();
 
-        std::vector<std::vector<std::string>> training_data = CsvFileHandler::read_data(training_dataset_path);
+        training_data = CsvFileHandler::read_data(training_dataset_path);
 
         timer.stop();
 
-        std::cout << " [DONE] [" << timer.elapsed_time() << " ms]" << std::endl;
+        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " ms]" << std::endl;
     }
     catch (const std::exception& e)
     {
@@ -34,7 +34,9 @@ int main(const int argc, char const* argv[])
 
     const std::string training_dataset_path = argv[1];
 
-    load_training_dataset(training_dataset_path);
+    std::vector<std::vector<std::string>> training_data;
+
+    load_training_dataset(training_dataset_path, training_data);
 
     return 0;
 }
