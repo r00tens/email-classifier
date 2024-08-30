@@ -9,9 +9,14 @@ void load_training_dataset(const std::string& training_dataset_path)
 
     try
     {
+        Timer timer;
+        timer.start();
+
         std::vector<std::vector<std::string>> training_data = CsvFileHandler::read_data(training_dataset_path);
 
-        std::cout << " [DONE]" << std::endl;
+        timer.stop();
+
+        std::cout << " [DONE] [" << timer.elapsed_time() << " ms]" << std::endl;
     }
     catch (const std::exception& e)
     {

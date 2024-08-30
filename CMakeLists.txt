@@ -25,6 +25,7 @@ endif()
 add_executable(email-classifier
         main.cpp
         utils/CsvFileHandler.cpp
+        utils/Timer.cpp
 )
 
 set_target_properties(email-classifier PROPERTIES
