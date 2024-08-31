@@ -83,49 +83,18 @@ int main(const int argc, char const* argv[])
     std::vector<std::vector<std::string>> training_data;
 
     load_training_dataset(training_dataset_path, training_data);
-
-    // for (unsigned int i{1}; const auto& row : training_data)
-    // {
-    //     if (i == 1)
-    //     {
-    //         i++;
-    //
-    //         continue;
-    //     }
-    //
-    //     std::cout << (i++ - 1) << ": ";
-    //
-    //     for (const auto& cell : row)
-    //     {
-    //         std::cout << cell << " ";
-    //     }
-    //
-    //     std::cout << std::endl;
-    // }
+    // CsvFileHandler::print_read_data(training_data);
 
     std::vector<std::string> train_texts;
     std::vector<int> train_labels;
 
     extract_texts_and_labels(training_data, train_texts, train_labels);
-
-    // for (unsigned int i{1}; const auto& text : train_texts)
-    // {
-    //     std::cout << i++ << ": " << text << std::endl;
-    // }
-    //
-    // for (unsigned int i{1}; const auto& label : train_labels)
-    // {
-    //     std::cout << i++ << ": " << label << std::endl;
-    // }
+    // TextProcessor::print_texts_and_labels(train_texts, train_labels);
 
     std::unordered_map<std::string, int> vocabulary;
 
     build_vocabulary(train_texts, vocabulary);
-
-    // for (unsigned int i{1}; const auto& [word, index] : vocabulary)
-    // {
-    //     std::cout << i++ << ": " << word << " -> " << index << std::endl;
-    // }
+    // TextProcessor::print_vocabulary(vocabulary);
 
     return 0;
 }

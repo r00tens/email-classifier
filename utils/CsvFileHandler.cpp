@@ -55,6 +55,21 @@ std::vector<std::vector<std::string>> CsvFileHandler::read_data(const std::strin
     return data;
 }
 
+void CsvFileHandler::print_read_data(const std::vector<std::vector<std::string>>& data)
+{
+    for (unsigned int i{1}; const auto& row : data)
+    {
+        std::cout << i++ << ": ";
+
+        for (const auto& cell : row)
+        {
+            std::cout << cell << ' ';
+        }
+
+        std::cout << '\n';
+    }
+}
+
 void CsvFileHandler::write_data(const std::vector<std::vector<std::string>>& data, const std::string& output_filename)
 {
     std::ofstream file(output_filename);

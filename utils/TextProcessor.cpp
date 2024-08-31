@@ -1,6 +1,7 @@
 #include "TextProcessor.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <sstream>
 #include <unordered_set>
 
@@ -38,6 +39,23 @@ void TextProcessor::extract_texts_and_labels(const std::vector<std::vector<std::
         {
             throw std::runtime_error("Invalid row encountered in data extraction: row has less than 2 columns.");
         }
+    }
+}
+
+void TextProcessor::print_texts_and_labels(const std::vector<std::string>& texts, const std::vector<int>& labels)
+{
+    std::cout << "Texts size: " << texts.size() << std::endl;
+
+    for (unsigned int i{1}; const auto& text : texts)
+    {
+        std::cout << i++ << ": " << text << std::endl;
+    }
+
+    std::cout << "Labels size: " << labels.size() << std::endl;
+
+    for (unsigned int i{1}; const auto& label : labels)
+    {
+        std::cout << i++ << ": " << label << std::endl;
     }
 }
 
@@ -163,5 +181,15 @@ void TextProcessor::build_vocabulary(const std::vector<std::string>& texts, std:
                 vocabulary[token] = index++;
             }
         }
+    }
+}
+
+void TextProcessor::print_vocabulary(const std::unordered_map<std::string, int>& vocabulary)
+{
+    std::cout << "Vocabulary size: " << vocabulary.size() << std::endl;
+
+    for (unsigned int i{1}; const auto& [word, index] : vocabulary)
+    {
+        std::cout << i++ << ": " << word << " -> " << index << std::endl;
     }
 }
