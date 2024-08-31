@@ -20,6 +20,8 @@ public:
     static std::vector<std::string> process_text(const std::string& text);
     static void build_vocabulary(const std::vector<std::string>& texts, std::unordered_map<std::string, int>& vocabulary);
     static void print_vocabulary(const std::unordered_map<std::string, int>& vocabulary);
+    static std::unordered_map<int, int> text_to_sparse_feature_vector(const std::unordered_map<std::string, int>& vocabulary, const std::string& text);
+    static std::vector<std::unordered_map<int, int>> create_sparse_feature_vectors(const std::unordered_map<std::string, int>& vocabulary, const std::vector<std::string>& texts);
 };
 
 #endif //TEXTPROCESSOR_HPP

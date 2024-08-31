@@ -19,32 +19,70 @@ std::vector<std::vector<std::string>> CsvFileHandler::read_data(const std::strin
     }
 
     std::string line;
+    std::vector<std::string> row;
+    bool inQuotes = false;
+    std::string current_cell;
+
     while (std::getline(file, line))
     {
-        std::vector<std::string> row;
-        std::string cell;
-        bool inQuotes = false;
-
-        for (const char c : line)
+        if (inQuotes)
         {
+            current_cell += "\n" + line;
+        }
+        else
+        {
+            if (!current_cell.empty())
+            {
+                row.push_back(current_cell);
+                current_cell.clear();
+            }
+
+            row.clear();
+        }
+
+        size_t i = 0;
+        while (i < line.size())
+        {
+            char c = line[i];
+
             if (c == '"')
             {
                 inQuotes = !inQuotes;
             }
             else if (c == ',' && !inQuotes)
             {
-                row.push_back(cell);
-                cell.clear();
+                row.push_back(current_cell);
+                current_cell.clear();
             }
             else
             {
-                cell += c;
+                current_cell += c;
             }
+
+            i++;
         }
 
-        row.push_back(cell);
+        if (!inQuotes)
+        {
+            row.push_back(current_cell);
+            current_cell.clear();
 
-        if (!row.empty())
+            if (row.size() == 2)
+            {
+                data.push_back(row);
+            }
+            else
+            {
+                std::cerr << "Warning: Incorrect number of columns in row, skipping: " << line << std::endl;
+            }
+        }
+    }
+
+    if (!current_cell.empty() && row.size() == 1)
+    {
+        row.push_back(current_cell);
+
+        if (row.size() == 2)
         {
             data.push_back(row);
         }

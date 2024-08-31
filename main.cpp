@@ -18,7 +18,7 @@ void load_training_dataset(const std::string& training_dataset_path, std::vector
 
         timer.stop();
 
-        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " ms]" << std::endl;
+        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " s]" << std::endl;
     }
     catch (const std::exception& e)
     {
@@ -40,7 +40,7 @@ void extract_texts_and_labels(const std::vector<std::vector<std::string>>& data,
 
         timer.stop();
 
-        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " ms]" << std::endl;
+        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " s]" << std::endl;
     }
     catch (const std::exception& e)
     {
@@ -62,7 +62,29 @@ void build_vocabulary(const std::vector<std::string>& texts, std::unordered_map<
 
         timer.stop();
 
-        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " ms]" << std::endl;
+        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " s]" << std::endl;
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << " [FAIL]" << std::endl;
+        std::cerr << e.what() << std::endl;
+    }
+}
+
+void create_sparse_feature_vectors(const std::unordered_map<std::string, int>& vocabulary, const std::vector<std::string>& texts, std::vector<std::unordered_map<int, int>>& feature_vectors)
+{
+    std::cout << "Creating sparse feature vectors...";
+
+    try
+    {
+        Timer timer;
+        timer.start();
+
+        feature_vectors = TextProcessor::create_sparse_feature_vectors(vocabulary, texts);
+
+        timer.stop();
+
+        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " s]" << std::endl;
     }
     catch (const std::exception& e)
     {
@@ -95,6 +117,9 @@ int main(const int argc, char const* argv[])
 
     build_vocabulary(train_texts, vocabulary);
     // TextProcessor::print_vocabulary(vocabulary);
+
+    std::vector<std::unordered_map<int, int>> feature_vectors;
+    create_sparse_feature_vectors(vocabulary, train_texts, feature_vectors);
 
     return 0;
 }

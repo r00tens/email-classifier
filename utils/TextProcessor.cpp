@@ -26,7 +26,7 @@ void TextProcessor::extract_texts_and_labels(const std::vector<std::vector<std::
         {
             texts.push_back(row[1]);
 
-            if ((row[0] == "spam" || row[0] == "Spam"))
+            if ((row[0] == "spam" || row[0] == "Spam") || (row[0] == "1"))
             {
                 labels.push_back(1);
             }
@@ -146,7 +146,7 @@ std::vector<std::string> TextProcessor::process_text(const std::string& text)
 {
     if (text.empty())
     {
-        throw std::invalid_argument("process_text: Input text is empty.");
+        return {};
     }
 
     const std::string lower_text = to_lowercase(text);
@@ -158,20 +158,10 @@ std::vector<std::string> TextProcessor::process_text(const std::string& text)
 
 void TextProcessor::build_vocabulary(const std::vector<std::string>& texts, std::unordered_map<std::string, int>& vocabulary)
 {
-    if (texts.empty())
-    {
-        throw std::invalid_argument("build_vocabulary: Input texts vector is empty.");
-    }
-
     int index{};
 
     for (const auto& text : texts)
     {
-        if (text.empty())
-        {
-            throw std::invalid_argument("build_vocabulary: One of the input texts is empty.");
-        }
-
         std::vector<std::string> tokens = process_text(text);
 
         for (const auto& token : tokens)
@@ -192,4 +182,33 @@ void TextProcessor::print_vocabulary(const std::unordered_map<std::string, int>&
     {
         std::cout << i++ << ": " << word << " -> " << index << std::endl;
     }
+}
+
+std::unordered_map<int, int> TextProcessor::text_to_sparse_feature_vector(const std::unordered_map<std::string, int>& vocabulary, const std::string& text)
+{
+    std::unordered_map<int, int> feature_vector;
+    std::vector<std::string> tokens = process_text(text);
+
+    for (const auto& token : tokens)
+    {
+        auto it = vocabulary.find(token);
+
+        if (it != vocabulary.end()) {
+            feature_vector[it->second]++;
+        }
+    }
+
+    return feature_vector;
+}
+
+std::vector<std::unordered_map<int, int>> TextProcessor::create_sparse_feature_vectors(const std::unordered_map<std::string, int>& vocabulary, const std::vector<std::string>& texts)
+{
+    std::vector<std::unordered_map<int, int>> feature_vectors;
+
+    for (const auto& text : texts)
+    {
+        feature_vectors.push_back(text_to_sparse_feature_vector(vocabulary, text));
+    }
+
+    return feature_vectors;
 }
