@@ -49,6 +49,28 @@ void extract_texts_and_labels(const std::vector<std::vector<std::string>>& data,
     }
 }
 
+void build_vocabulary(const std::vector<std::string>& texts, std::unordered_map<std::string, int>& vocabulary)
+{
+    std::cout << "Building vocabulary...";
+
+    try
+    {
+        Timer timer;
+        timer.start();
+
+        TextProcessor::build_vocabulary(texts, vocabulary);
+
+        timer.stop();
+
+        std::cout << " [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " ms]" << std::endl;
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << " [FAIL]" << std::endl;
+        std::cerr << e.what() << std::endl;
+    }
+}
+
 int main(const int argc, char const* argv[])
 {
     if (argc != 4)
@@ -94,6 +116,15 @@ int main(const int argc, char const* argv[])
     // for (unsigned int i{1}; const auto& label : train_labels)
     // {
     //     std::cout << i++ << ": " << label << std::endl;
+    // }
+
+    std::unordered_map<std::string, int> vocabulary;
+
+    build_vocabulary(train_texts, vocabulary);
+
+    // for (unsigned int i{1}; const auto& [word, index] : vocabulary)
+    // {
+    //     std::cout << i++ << ": " << word << " -> " << index << std::endl;
     // }
 
     return 0;

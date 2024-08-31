@@ -1,7 +1,12 @@
 #include "TextProcessor.hpp"
 
+#include <algorithm>
 #include <sstream>
 #include <unordered_set>
+
+TextProcessor::TextProcessor() = default;
+
+TextProcessor::~TextProcessor() = default;
 
 void TextProcessor::extract_texts_and_labels(const std::vector<std::vector<std::string>>& data, std::vector<std::string>& texts, std::vector<int>& labels)
 {
@@ -31,7 +36,132 @@ void TextProcessor::extract_texts_and_labels(const std::vector<std::vector<std::
         }
         else
         {
-            throw std::runtime_error("Invalid row encountered in data extraction.");
+            throw std::runtime_error("Invalid row encountered in data extraction: row has less than 2 columns.");
+        }
+    }
+}
+
+std::string TextProcessor::to_lowercase(const std::string& text)
+{
+    if (text.empty())
+    {
+        throw std::invalid_argument("to_lowercase: Input text is empty.");
+    }
+
+    std::string result = text;
+    std::ranges::transform(result, result.begin(), ::tolower);
+
+    return result;
+}
+
+std::string TextProcessor::remove_punctuation_and_special_chars(const std::string& text)
+{
+    if (text.empty())
+    {
+        throw std::invalid_argument("remove_punctuation_and_special_chars: Input text is empty.");
+    }
+
+    std::string result = text;
+
+    std::erase_if(result, [](const unsigned char c)
+    {
+        return std::ispunct(c) || (!std::isalnum(c) && !std::isspace(c));
+    });
+
+    return result;
+}
+
+std::string TextProcessor::remove_stop_words(const std::string& text)
+{
+    const std::unordered_set<std::string> stop_words = {
+        "is", "a", "of", "in", "the", "this", "and", "to", "with"
+    };
+
+    std::istringstream iss(text);
+    std::string word;
+    std::string result;
+
+    while (iss >> word)
+    {
+        if (!stop_words.contains(word))
+        {
+            result += word + " ";
+        }
+    }
+
+    if (!result.empty())
+    {
+        result.pop_back();
+    }
+
+    return result;
+}
+
+std::string TextProcessor::clean_text(const std::string& text)
+{
+    if (text.empty())
+    {
+        throw std::invalid_argument("clean_text: Input text is empty.");
+    }
+
+    const std::string no_punc_spec = remove_punctuation_and_special_chars(text);
+    const std::string no_stop_words_text = remove_stop_words(no_punc_spec);
+
+    return no_stop_words_text;
+}
+
+std::vector<std::string> TextProcessor::tokenize(const std::string& text)
+{
+    std::istringstream iss(text);
+    std::vector<std::string> tokens;
+    std::string token;
+
+    while (iss >> token)
+    {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
+
+std::vector<std::string> TextProcessor::process_text(const std::string& text)
+{
+    if (text.empty())
+    {
+        throw std::invalid_argument("process_text: Input text is empty.");
+    }
+
+    const std::string lower_text = to_lowercase(text);
+    const std::string cleaned_text = clean_text(lower_text);
+    const std::vector<std::string> tokens = tokenize(cleaned_text);
+
+    return tokens;
+}
+
+void TextProcessor::build_vocabulary(const std::vector<std::string>& texts, std::unordered_map<std::string, int>& vocabulary)
+{
+    if (texts.empty())
+    {
+        throw std::invalid_argument("build_vocabulary: Input texts vector is empty.");
+    }
+
+    int index{};
+
+    for (const auto& text : texts)
+    {
+        if (text.empty())
+        {
+            throw std::invalid_argument("build_vocabulary: One of the input texts is empty.");
+        }
+
+        std::vector<std::string> tokens = process_text(text);
+
+        for (const auto& token : tokens)
+        {
+            if (!vocabulary.contains(token))
+            {
+                vocabulary[token] = index++;
+            }
         }
     }
 }
