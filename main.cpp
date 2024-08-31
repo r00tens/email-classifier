@@ -117,9 +117,11 @@ int main(const int argc, char const* argv[])
 
     build_vocabulary(train_texts, vocabulary);
     // TextProcessor::print_vocabulary(vocabulary);
+    // CsvFileHandler::write_data(vocabulary, "vocabulary.csv");
 
     std::vector<std::unordered_map<int, int>> feature_vectors;
     create_sparse_feature_vectors(vocabulary, train_texts, feature_vectors);
+    // CsvFileHandler::write_data(feature_vectors, "feature-vectors.csv");
 
     return 0;
 }

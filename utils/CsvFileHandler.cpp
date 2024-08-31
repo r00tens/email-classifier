@@ -129,3 +129,38 @@ void CsvFileHandler::write_data(const std::vector<std::vector<std::string>>& dat
 
     file.close();
 }
+
+void CsvFileHandler::write_data(const std::unordered_map<std::string, int>& data, const std::string& output_filename)
+{
+    std::ofstream file(output_filename);
+
+    if (!file.is_open())
+    {
+        throw std::runtime_error("Could not open the file: " + output_filename);
+    }
+
+    for (const auto& [key, value] : data)
+    {
+        file << key << ',' << value << '\n';
+    }
+
+    file.close();
+}
+
+void CsvFileHandler::write_data(const std::vector<std::unordered_map<int, int>>& data, const std::string& output_filename)
+{
+    std::ofstream file(output_filename);
+
+    if (!file.is_open())
+    {
+        throw std::runtime_error("Could not open the file: " + output_filename);
+    }
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        const auto& map = data[i];
+
+        for (const auto& pair : map) {
+            file << i << "," << pair.first << "," << pair.second << "\n";
+        }
+    }
+}
