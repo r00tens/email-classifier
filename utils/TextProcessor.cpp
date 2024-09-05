@@ -92,7 +92,17 @@ std::string TextProcessor::remove_punctuation_and_special_chars(const std::strin
 std::string TextProcessor::remove_stop_words(const std::string& text)
 {
     const std::unordered_set<std::string> stop_words = {
-        "is", "a", "of", "in", "the", "this", "and", "to", "with"
+        // "i", "you", "he", "she", "it", "we", "they",
+        // "am", "is", "are", "was", "were", "be", "being", "been",
+        // "me", "him", "her", "us", "them",
+        // "my", "your", "his", "her", "its", "our", "their",
+        // "and", "or", "but", "nor", "yet", "so",
+        // "in", "on", "at", "by", "with", "from", "to", "of", "for", "as", "about", "against", "between", "during", "through", "over", "under", "into", "out", "up", "down",
+        // "this", "that", "these", "those",
+        // "who", "what", "which", "where", "when", "how",
+        // "have", "has", "had",
+        // "can", "could", "will", "would", "shall", "should", "may", "might", "must",
+        // "the", "a", "an", "not", "no", "if", "while", "just", "even", "also", "only", "than", "very"
     };
 
     std::istringstream iss(text);
