@@ -1,90 +1,26 @@
 #include "CsvFileHandler.hpp"
-
 #include <fstream>
-#include <iostream>
 #include <sstream>
+#include <stdexcept>
 
-CsvFileHandler::CsvFileHandler() = default;
-
-CsvFileHandler::~CsvFileHandler() = default;
-
-std::vector<std::vector<std::string>> CsvFileHandler::read_data(const std::string& filename)
+auto CsvFileHandler::readData(const std::string& filename) -> std::vector<std::vector<std::string>>
 {
     std::vector<std::vector<std::string>> data;
     std::ifstream file(filename);
 
     if (!file.is_open())
     {
-        throw std::runtime_error("Could not open the file: " + filename);
+        throw std::runtime_error("Failed to open file: " + filename);
     }
 
     std::string line;
-    std::vector<std::string> row;
-    bool inQuotes = false;
-    std::string current_cell;
 
     while (std::getline(file, line))
     {
-        if (inQuotes)
+        std::vector<std::string> row = parseCsvLine(line);
+        if (!row.empty())
         {
-            current_cell += "\n" + line;
-        }
-        else
-        {
-            if (!current_cell.empty())
-            {
-                row.push_back(current_cell);
-                current_cell.clear();
-            }
-
-            row.clear();
-        }
-
-        size_t i = 0;
-        while (i < line.size())
-        {
-            char c = line[i];
-
-            if (c == '"')
-            {
-                inQuotes = !inQuotes;
-            }
-            else if (c == ',' && !inQuotes)
-            {
-                row.push_back(current_cell);
-                current_cell.clear();
-            }
-            else
-            {
-                current_cell += c;
-            }
-
-            i++;
-        }
-
-        if (!inQuotes)
-        {
-            row.push_back(current_cell);
-            current_cell.clear();
-
-            if (row.size() == 2)
-            {
-                data.push_back(row);
-            }
-            else
-            {
-                std::cerr << "Warning: Incorrect number of columns in row, skipping: " << line << std::endl;
-            }
-        }
-    }
-
-    if (!current_cell.empty() && row.size() == 1)
-    {
-        row.push_back(current_cell);
-
-        if (row.size() == 2)
-        {
-            data.push_back(row);
+            validateAndAddRow(data, row, line);
         }
     }
 
@@ -93,74 +29,43 @@ std::vector<std::vector<std::string>> CsvFileHandler::read_data(const std::strin
     return data;
 }
 
-void CsvFileHandler::print_read_data(const std::vector<std::vector<std::string>>& data)
+auto CsvFileHandler::parseCsvLine(const std::string& line) -> std::vector<std::string>
 {
-    for (unsigned int i{1}; const auto& row : data)
-    {
-        std::cout << i++ << ": ";
+    std::vector<std::string> row;
+    std::string currentCell;
+    bool inQuotes = false;
 
-        for (const auto& cell : row)
+    for (const char currentChar : line)
+    {
+        if (currentChar == '"')
         {
-            std::cout << cell << ' ';
+            inQuotes = !inQuotes; // Toggle quotes state
         }
-
-        std::cout << '\n';
-    }
-}
-
-void CsvFileHandler::write_data(const std::vector<std::vector<std::string>>& data, const std::string& output_filename)
-{
-    std::ofstream file(output_filename);
-
-    if (!file.is_open())
-    {
-        throw std::runtime_error("Could not open the file: " + output_filename);
-    }
-
-    for (const auto& row : data)
-    {
-        for (const auto& cell : row)
+        else if (currentChar == ',' && !inQuotes)
         {
-            file << cell << ',';
+            row.push_back(currentCell);
+            currentCell.clear();
         }
-
-        file << '\n';
+        else
+        {
+            currentCell += currentChar;
+        }
     }
 
-    file.close();
+    row.push_back(currentCell); // Add the last cell
+
+    return row;
 }
 
-void CsvFileHandler::write_data(const std::unordered_map<std::string, int>& data, const std::string& output_filename)
+void CsvFileHandler::validateAndAddRow(std::vector<std::vector<std::string>>& data, const std::vector<std::string>& row,
+                                       const std::string& line)
 {
-    std::ofstream file(output_filename);
-
-    if (!file.is_open())
+    if (row.size() == 2) // Expecting 2 columns
     {
-        throw std::runtime_error("Could not open the file: " + output_filename);
+        data.push_back(row);
     }
-
-    for (const auto& [key, value] : data)
+    else
     {
-        file << key << ',' << value << '\n';
-    }
-
-    file.close();
-}
-
-void CsvFileHandler::write_data(const std::vector<std::unordered_map<int, int>>& data, const std::string& output_filename)
-{
-    std::ofstream file(output_filename);
-
-    if (!file.is_open())
-    {
-        throw std::runtime_error("Could not open the file: " + output_filename);
-    }
-
-    for (size_t i = 0; i < data.size(); ++i) {
-        const auto& map = data[i];
-
-        for (const auto& pair : map) {
-            file << i << "," << pair.first << "," << pair.second << "\n";
-        }
+        throw std::runtime_error("Incorrect number of columns in row: " + line);
     }
 }
