@@ -1,6 +1,13 @@
 #ifndef CSRMATRIX_HPP
 #define CSRMATRIX_HPP
 
+#include <vector>
+#include <unordered_map>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+
 struct CSRMatrix
 {
     std::vector<size_t> rowPointers;
