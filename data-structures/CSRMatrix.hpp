@@ -1,12 +1,12 @@
 #ifndef CSRMATRIX_HPP
 #define CSRMATRIX_HPP
 
-#include <vector>
-#include <unordered_map>
-#include <string>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 struct CSRMatrix
 {
