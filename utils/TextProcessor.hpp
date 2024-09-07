@@ -22,6 +22,10 @@ public:
     static void print_vocabulary(const std::unordered_map<std::string, int>& vocabulary);
     static std::unordered_map<int, int> text_to_sparse_feature_vector(const std::unordered_map<std::string, int>& vocabulary, const std::string& text);
     static std::vector<std::unordered_map<int, int>> create_sparse_feature_vectors(const std::unordered_map<std::string, int>& vocabulary, const std::vector<std::string>& texts);
+
+    static std::unordered_map<std::string, int> count_word_frequency(const std::vector<std::string>& texts);
+    static void filter_rare_words(std::unordered_map<std::string, int>& vocabulary, const std::unordered_map<std::string, int>& word_count, int min_frequency);
+
 };
 
 #endif //TEXTPROCESSOR_HPP

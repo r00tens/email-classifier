@@ -9,7 +9,8 @@ TextProcessor::TextProcessor() = default;
 
 TextProcessor::~TextProcessor() = default;
 
-void TextProcessor::extract_texts_and_labels(const std::vector<std::vector<std::string>>& data, std::vector<std::string>& texts, std::vector<int>& labels)
+void TextProcessor::extract_texts_and_labels(const std::vector<std::vector<std::string>>& data,
+                                             std::vector<std::string>& texts, std::vector<int>& labels)
 {
     bool is_first_row = true;
 
@@ -166,9 +167,45 @@ std::vector<std::string> TextProcessor::process_text(const std::string& text)
     return tokens;
 }
 
-void TextProcessor::build_vocabulary(const std::vector<std::string>& texts, std::unordered_map<std::string, int>& vocabulary)
+std::unordered_map<std::string, int> TextProcessor::count_word_frequency(const std::vector<std::string>& texts)
+{
+    std::unordered_map<std::string, int> word_count;
+
+    for (const auto& text : texts)
+    {
+        std::vector<std::string> tokens = process_text(text);
+
+        for (const auto& token : tokens)
+        {
+            word_count[token]++;
+        }
+    }
+
+    return word_count;
+}
+
+void TextProcessor::filter_rare_words(std::unordered_map<std::string, int>& vocabulary,
+                                      const std::unordered_map<std::string, int>& word_count, int min_frequency)
+{
+    for (auto it = vocabulary.begin(); it != vocabulary.end();)
+    {
+        if (word_count.at(it->first) < min_frequency)
+        {
+            it = vocabulary.erase(it); // Usunięcie słów, które pojawiają się rzadziej niż min_frequency
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
+void TextProcessor::build_vocabulary(const std::vector<std::string>& texts,
+                                     std::unordered_map<std::string, int>& vocabulary)
 {
     int index{};
+
+    std::unordered_map<std::string, int> word_count = count_word_frequency(texts);
 
     for (const auto& text : texts)
     {
@@ -182,6 +219,10 @@ void TextProcessor::build_vocabulary(const std::vector<std::string>& texts, std:
             }
         }
     }
+
+    constexpr int MIN_FREQUENCY = 3;
+
+    filter_rare_words(vocabulary, word_count, MIN_FREQUENCY);
 }
 
 void TextProcessor::print_vocabulary(const std::unordered_map<std::string, int>& vocabulary)
@@ -194,7 +235,8 @@ void TextProcessor::print_vocabulary(const std::unordered_map<std::string, int>&
     }
 }
 
-std::unordered_map<int, int> TextProcessor::text_to_sparse_feature_vector(const std::unordered_map<std::string, int>& vocabulary, const std::string& text)
+std::unordered_map<int, int> TextProcessor::text_to_sparse_feature_vector(
+    const std::unordered_map<std::string, int>& vocabulary, const std::string& text)
 {
     std::unordered_map<int, int> feature_vector;
     std::vector<std::string> tokens = process_text(text);
@@ -203,7 +245,8 @@ std::unordered_map<int, int> TextProcessor::text_to_sparse_feature_vector(const 
     {
         auto it = vocabulary.find(token);
 
-        if (it != vocabulary.end()) {
+        if (it != vocabulary.end())
+        {
             feature_vector[it->second]++;
         }
     }
@@ -211,7 +254,8 @@ std::unordered_map<int, int> TextProcessor::text_to_sparse_feature_vector(const 
     return feature_vector;
 }
 
-std::vector<std::unordered_map<int, int>> TextProcessor::create_sparse_feature_vectors(const std::unordered_map<std::string, int>& vocabulary, const std::vector<std::string>& texts)
+std::vector<std::unordered_map<int, int>> TextProcessor::create_sparse_feature_vectors(
+    const std::unordered_map<std::string, int>& vocabulary, const std::vector<std::string>& texts)
 {
     std::vector<std::unordered_map<int, int>> feature_vectors;
 
