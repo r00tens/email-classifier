@@ -5,20 +5,16 @@
 #include <sstream>
 #include <unordered_set>
 
-TextProcessor::TextProcessor() = default;
-
-TextProcessor::~TextProcessor() = default;
-
-void TextProcessor::extract_texts_and_labels(const std::vector<std::vector<std::string>>& data,
-                                             std::vector<std::string>& texts, std::vector<int>& labels)
+void TextProcessor::extractTextsAndLabels(const std::vector<std::vector<std::string>>& data,
+                                          std::vector<std::string>& texts, std::vector<int>& labels)
 {
-    bool is_first_row = true;
+    bool isFirstRow = true;
 
     for (const auto& row : data)
     {
-        if (is_first_row)
+        if (isFirstRow)
         {
-            is_first_row = false;
+            isFirstRow = false;
 
             continue;
         }
@@ -43,24 +39,24 @@ void TextProcessor::extract_texts_and_labels(const std::vector<std::vector<std::
     }
 }
 
-void TextProcessor::print_texts_and_labels(const std::vector<std::string>& texts, const std::vector<int>& labels)
+void TextProcessor::printTextsAndLabels(const std::vector<std::string>& texts, const std::vector<int>& labels)
 {
-    std::cout << "Texts size: " << texts.size() << std::endl;
+    std::cout << "Texts size: " << texts.size() << '\n';
 
-    for (unsigned int i{1}; const auto& text : texts)
+    for (unsigned int idx{1}; const auto& text : texts)
     {
-        std::cout << i++ << ": " << text << std::endl;
+        std::cout << idx++ << ": " << text << '\n';
     }
 
-    std::cout << "Labels size: " << labels.size() << std::endl;
+    std::cout << "Labels size: " << labels.size() << '\n';
 
-    for (unsigned int i{1}; const auto& label : labels)
+    for (unsigned int idx{1}; const auto& label : labels)
     {
-        std::cout << i++ << ": " << label << std::endl;
+        std::cout << idx++ << ": " << label << '\n';
     }
 }
 
-std::string TextProcessor::to_lowercase(const std::string& text)
+auto TextProcessor::toLowercase(const std::string& text) -> std::string
 {
     if (text.empty())
     {
@@ -73,7 +69,7 @@ std::string TextProcessor::to_lowercase(const std::string& text)
     return result;
 }
 
-std::string TextProcessor::remove_punctuation_and_special_chars(const std::string& text)
+auto TextProcessor::removePunctuationAndSpecialChars(const std::string& text) -> std::string
 {
     if (text.empty())
     {
@@ -82,17 +78,17 @@ std::string TextProcessor::remove_punctuation_and_special_chars(const std::strin
 
     std::string result = text;
 
-    std::erase_if(result, [](const unsigned char c)
+    std::erase_if(result, [](const unsigned char chr)
     {
-        return std::ispunct(c) || (!std::isalnum(c) && !std::isspace(c));
+        return std::ispunct(chr) || (!std::isalnum(chr) && !std::isspace(chr));
     });
 
     return result;
 }
 
-std::string TextProcessor::remove_stop_words(const std::string& text)
+auto TextProcessor::removeStopWords(const std::string& text) -> std::string
 {
-    const std::unordered_set<std::string> stop_words = {
+    const std::unordered_set<std::string> stopWords = {
         // "i", "you", "he", "she", "it", "we", "they",
         // "am", "is", "are", "was", "were", "be", "being", "been",
         // "me", "him", "her", "us", "them",
@@ -112,7 +108,7 @@ std::string TextProcessor::remove_stop_words(const std::string& text)
 
     while (iss >> word)
     {
-        if (!stop_words.contains(word))
+        if (!stopWords.contains(word))
         {
             result += word + " ";
         }
@@ -126,20 +122,20 @@ std::string TextProcessor::remove_stop_words(const std::string& text)
     return result;
 }
 
-std::string TextProcessor::clean_text(const std::string& text)
+auto TextProcessor::cleanText(const std::string& text) -> std::string
 {
     if (text.empty())
     {
         throw std::invalid_argument("clean_text: Input text is empty.");
     }
 
-    const std::string no_punc_spec = remove_punctuation_and_special_chars(text);
-    const std::string no_stop_words_text = remove_stop_words(no_punc_spec);
+    const std::string noPuncSpec = removePunctuationAndSpecialChars(text);
+    const std::string noStopWordsText = removeStopWords(noPuncSpec);
 
-    return no_stop_words_text;
+    return noStopWordsText;
 }
 
-std::vector<std::string> TextProcessor::tokenize(const std::string& text)
+auto TextProcessor::tokenize(const std::string& text) -> std::vector<std::string>
 {
     std::istringstream iss(text);
     std::vector<std::string> tokens;
@@ -153,43 +149,43 @@ std::vector<std::string> TextProcessor::tokenize(const std::string& text)
     return tokens;
 }
 
-std::vector<std::string> TextProcessor::process_text(const std::string& text)
+auto TextProcessor::processText(const std::string& text) -> std::vector<std::string>
 {
     if (text.empty())
     {
         return {};
     }
 
-    const std::string lower_text = to_lowercase(text);
-    const std::string cleaned_text = clean_text(lower_text);
-    const std::vector<std::string> tokens = tokenize(cleaned_text);
+    const std::string lowerText = toLowercase(text);
+    const std::string cleanedText = cleanText(lowerText);
+    const std::vector<std::string> tokens = tokenize(cleanedText);
 
     return tokens;
 }
 
-std::unordered_map<std::string, int> TextProcessor::count_word_frequency(const std::vector<std::string>& texts)
+auto TextProcessor::countWordFrequency(const std::vector<std::string>& texts) -> std::unordered_map<std::string, int>
 {
-    std::unordered_map<std::string, int> word_count;
+    std::unordered_map<std::string, int> wordCount;
 
     for (const auto& text : texts)
     {
-        std::vector<std::string> tokens = process_text(text);
+        std::vector<std::string> tokens = processText(text);
 
         for (const auto& token : tokens)
         {
-            word_count[token]++;
+            wordCount[token]++;
         }
     }
 
-    return word_count;
+    return wordCount;
 }
 
-void TextProcessor::filter_rare_words(std::unordered_map<std::string, int>& vocabulary,
-                                      const std::unordered_map<std::string, int>& word_count, int min_frequency)
+void TextProcessor::filterRareWords(std::unordered_map<std::string, int>& vocabulary,
+                                    const std::unordered_map<std::string, int>& wordCount, int minFrequency)
 {
     for (auto it = vocabulary.begin(); it != vocabulary.end();)
     {
-        if (word_count.at(it->first) < min_frequency)
+        if (wordCount.at(it->first) < minFrequency)
         {
             it = vocabulary.erase(it); // Usunięcie słów, które pojawiają się rzadziej niż min_frequency
         }
@@ -200,16 +196,16 @@ void TextProcessor::filter_rare_words(std::unordered_map<std::string, int>& voca
     }
 }
 
-void TextProcessor::build_vocabulary(const std::vector<std::string>& texts,
-                                     std::unordered_map<std::string, int>& vocabulary)
+void TextProcessor::buildVocabulary(const std::vector<std::string>& texts,
+                                    std::unordered_map<std::string, int>& vocabulary)
 {
     int index{};
 
-    std::unordered_map<std::string, int> word_count = count_word_frequency(texts);
+    std::unordered_map<std::string, int> wordCount = countWordFrequency(texts);
 
     for (const auto& text : texts)
     {
-        std::vector<std::string> tokens = process_text(text);
+        std::vector<std::string> tokens = processText(text);
 
         for (const auto& token : tokens)
         {
@@ -222,47 +218,48 @@ void TextProcessor::build_vocabulary(const std::vector<std::string>& texts,
 
     constexpr int MIN_FREQUENCY = 3;
 
-    filter_rare_words(vocabulary, word_count, MIN_FREQUENCY);
+    filterRareWords(vocabulary, wordCount, MIN_FREQUENCY);
 }
 
-void TextProcessor::print_vocabulary(const std::unordered_map<std::string, int>& vocabulary)
+void TextProcessor::printVocabulary(const std::unordered_map<std::string, int>& vocabulary)
 {
-    std::cout << "Vocabulary size: " << vocabulary.size() << std::endl;
+    std::cout << "Vocabulary size: " << vocabulary.size() << '\n';
 
-    for (unsigned int i{1}; const auto& [word, index] : vocabulary)
+    for (unsigned int idx{1}; const auto& [word, index] : vocabulary)
     {
-        std::cout << i++ << ": " << word << " -> " << index << std::endl;
+        std::cout << idx++ << ": " << word << " -> " << index << '\n';
     }
 }
 
-std::unordered_map<int, int> TextProcessor::text_to_sparse_feature_vector(
-    const std::unordered_map<std::string, int>& vocabulary, const std::string& text)
+auto TextProcessor::textToSparseFeatureVector(
+    const std::unordered_map<std::string, int>& vocabulary, const std::string& text) -> std::unordered_map<int, int>
 {
-    std::unordered_map<int, int> feature_vector;
-    std::vector<std::string> tokens = process_text(text);
+    std::unordered_map<int, int> featureVector;
+    std::vector<std::string> tokens = processText(text);
 
     for (const auto& token : tokens)
     {
-        auto it = vocabulary.find(token);
+        auto iter = vocabulary.find(token);
 
-        if (it != vocabulary.end())
+        if (iter != vocabulary.end())
         {
-            feature_vector[it->second]++;
+            featureVector[iter->second]++;
         }
     }
 
-    return feature_vector;
+    return featureVector;
 }
 
-std::vector<std::unordered_map<int, int>> TextProcessor::create_sparse_feature_vectors(
-    const std::unordered_map<std::string, int>& vocabulary, const std::vector<std::string>& texts)
+auto TextProcessor::createSparseFeatureVectors(
+    const std::unordered_map<std::string, int>& vocabulary,
+    const std::vector<std::string>& texts) -> std::vector<std::unordered_map<int, int>>
 {
-    std::vector<std::unordered_map<int, int>> feature_vectors;
+    std::vector<std::unordered_map<int, int>> featureVectors;
 
     for (const auto& text : texts)
     {
-        feature_vectors.push_back(text_to_sparse_feature_vector(vocabulary, text));
+        featureVectors.push_back(textToSparseFeatureVector(vocabulary, text));
     }
 
-    return feature_vectors;
+    return featureVectors;
 }
