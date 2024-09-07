@@ -40,7 +40,7 @@ void extractTextsAndLabels(const std::vector<std::vector<std::string>>& data, st
         Timer timer;
         timer.start();
 
-        TextProcessor::extract_texts_and_labels(data, texts, labels);
+        TextProcessor::extractTextsAndLabels(data, texts, labels);
 
         timer.stop();
 
@@ -62,7 +62,7 @@ void buildVocabulary(const std::vector<std::string>& texts, std::unordered_map<s
         Timer timer;
         timer.start();
 
-        TextProcessor::build_vocabulary(texts, vocabulary);
+        TextProcessor::buildVocabulary(texts, vocabulary);
 
         timer.stop();
 
@@ -136,7 +136,7 @@ void createSparseFeatureVectors(const std::unordered_map<std::string, int>& voca
             Timer timer;
             timer.start();
 
-            featureVectors = TextProcessor::create_sparse_feature_vectors(vocabulary, texts);
+            featureVectors = TextProcessor::createSparseFeatureVectors(vocabulary, texts);
 
             timer.stop();
 
@@ -174,7 +174,7 @@ void createSparseFeatureVectors(const std::unordered_map<std::string, int>& voca
             );
 
             std::vector<std::unordered_map<int, int>> batchFeatureVectors =
-                TextProcessor::create_sparse_feature_vectors(vocabulary, batch);
+                TextProcessor::createSparseFeatureVectors(vocabulary, batch);
 
             CsvFileHandler::writeSparseFeatureVectors(outputFilename, batchFeatureVectors, i == 0, globalIndex);
 
@@ -239,11 +239,50 @@ void loadSparseFeatureVectors(const std::string& filename, CSRMatrix& sparseFeat
     }
 }
 
+void trainClassifier(NaiveBayesCPU& naiveBayesCPU, const std::vector<int>& trainLabels,
+                     const std::unordered_map<std::string, int>& vocabulary,
+                     const CSRMatrix& csrSparseFeatureVectors)
+{
+    std::cout << "Training classifier...\n";
+
+    Timer timer;
+    timer.start();
+
+    naiveBayesCPU.train(trainLabels, vocabulary, csrSparseFeatureVectors);
+
+    timer.stop();
+
+    std::cout << "CPU: [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " s]\n";
+
+    naiveBayesCPU.printModel();
+}
+
+void evaluateClassifier(NaiveBayesCPU& naiveBayesCPU, const std::vector<std::string>& testTexts,
+                        const std::vector<int>& testLabels)
+{
+    std::cout << "Evaluating classifier...\n";
+
+    Timer timer;
+    timer.start();
+
+    constexpr int POSITIVE_CLASS = 1;
+
+    naiveBayesCPU.evaluate(testTexts, testLabels, POSITIVE_CLASS);
+
+    timer.stop();
+
+    std::cout << "CPU: [DONE] [" << timer.elapsed_time() << " s]\n";
+
+    naiveBayesCPU.printEvaluationMetrics();
+}
+
 auto main(const int argc, char const* argv[]) -> int
 {
-    if (argc != 4)
+    constexpr int MIN_ARGC = 5;
+
+    if (argc != MIN_ARGC)
     {
-        std::cerr << "Usage: " << argv[0] << " <training-dataset> <input-dataset> <output>" << '\n';
+        std::cerr << "Usage: " << argv[0] << " <training-dataset> <test-dataset> <input-dataset> <output>" << '\n';
 
         return 1;
     }
@@ -261,21 +300,37 @@ auto main(const int argc, char const* argv[]) -> int
 
     std::unordered_map<std::string, int> vocabulary;
 
-    // buildVocabulary(trainTexts, vocabulary);
-    // saveVocabulary(vocabulary, "vocabulary.csv");
-    loadVocabulary("vocabulary.csv", vocabulary);
+    buildVocabulary(trainTexts, vocabulary);
+    saveVocabulary(vocabulary, "vocabulary.csv");
+    // loadVocabulary("vocabulary.csv", vocabulary);
 
     std::vector<std::unordered_map<int, int>> sparseFeatureVectors;
     CSRMatrix csrSparseFeatureVectors;
-    // constexpr size_t BATCH_SIZE = 10000;
+    constexpr size_t BATCH_SIZE = 100000;
 
     // createSparseFeatureVectors(vocabulary, trainTexts, sparseFeatureVectors, BATCH_SIZE, "sparse-feature-vectors.csv");
-    // createSparseFeatureVectors(vocabulary, trainTexts, sparseFeatureVectors, BATCH_SIZE, "sparse-feature-vectors.csv",
-                               // true);
+    createSparseFeatureVectors(vocabulary, trainTexts, sparseFeatureVectors, BATCH_SIZE, "sparse-feature-vectors.csv",
+                               true);
 
     // CSRMatrix csrSparseFeatureVectors = convertMapToCSR(sparseFeatureVectors);
 
     loadSparseFeatureVectors("sparse-feature-vectors.csv", csrSparseFeatureVectors);
+
+    NaiveBayesCPU naiveBayesCPU;
+
+    trainClassifier(naiveBayesCPU, trainLabels, vocabulary, csrSparseFeatureVectors);
+
+    std::vector<std::vector<std::string>> testData;
+    const std::string testDatasetPath = argv[2];
+
+    loadTrainingDataset(testDatasetPath, testData);
+
+    std::vector<std::string> testTexts;
+    std::vector<int> testLabels;
+
+    extractTextsAndLabels(testData, testTexts, testLabels);
+
+    evaluateClassifier(naiveBayesCPU, testTexts, testLabels);
 
     return 0;
 }

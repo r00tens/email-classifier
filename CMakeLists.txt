@@ -35,6 +35,7 @@ add_executable(email-classifier
         utils/Timer.cpp
         utils/CsvFileHandler.cpp
         utils/TextProcessor.cpp
+        utils/NaiveBayesCPU.cpp
         cuda/CudaTimer.cu
         cuda/GPUInfo.cu
 )
