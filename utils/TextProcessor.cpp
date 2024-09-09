@@ -200,8 +200,9 @@ void TextProcessor::buildVocabulary(const std::vector<std::string>& texts,
                                     std::unordered_map<std::string, int>& vocabulary)
 {
     int index{};
-
     std::unordered_map<std::string, int> wordCount = countWordFrequency(texts);
+
+    constexpr int MIN_FREQUENCY = 3;
 
     for (const auto& text : texts)
     {
@@ -209,16 +210,12 @@ void TextProcessor::buildVocabulary(const std::vector<std::string>& texts,
 
         for (const auto& token : tokens)
         {
-            if (!vocabulary.contains(token))
+            if (!vocabulary.contains(token) && wordCount[token] >= MIN_FREQUENCY)
             {
                 vocabulary[token] = index++;
             }
         }
     }
-
-    constexpr int MIN_FREQUENCY = 3;
-
-    filterRareWords(vocabulary, wordCount, MIN_FREQUENCY);
 }
 
 void TextProcessor::printVocabulary(const std::unordered_map<std::string, int>& vocabulary)
