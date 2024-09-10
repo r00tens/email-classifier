@@ -38,6 +38,7 @@ add_executable(email-classifier
         utils/NaiveBayesCPU.cpp
         cuda/CudaTimer.cu
         cuda/GPUInfo.cu
+        cuda/NaiveBayesGPU.cu
 )
 
 target_link_libraries(email-classifier ${CUDA_LIBRARIES} ${CUDAToolkit_LIBRARIES})
