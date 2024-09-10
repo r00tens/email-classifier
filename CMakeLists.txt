@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.29)
 
-project(email-classifier CXX CUDA)
+project(text-classifier CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -30,7 +30,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     message("Building in Release mode")
 endif ()
 
-add_executable(email-classifier
+add_executable(text-classifier
         main.cpp
         utils/Timer.cpp
         utils/CsvFileHandler.cpp
@@ -41,9 +41,9 @@ add_executable(email-classifier
         cuda/NaiveBayesGPU.cu
 )
 
-target_link_libraries(email-classifier ${CUDA_LIBRARIES} ${CUDAToolkit_LIBRARIES})
+target_link_libraries(text-classifier ${CUDA_LIBRARIES} ${CUDAToolkit_LIBRARIES})
 
-set_target_properties(email-classifier PROPERTIES
+set_target_properties(text-classifier PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
 )
 
@@ -126,6 +126,6 @@ add_custom_target(copy_test_dataset ALL
 )
 
 # Add dependencies between copying the files and building the executable
-add_dependencies(email-classifier copy_training_dataset)
-add_dependencies(email-classifier copy_input_dataset)
-add_dependencies(email-classifier copy_test_dataset)
+add_dependencies(text-classifier copy_training_dataset)
+add_dependencies(text-classifier copy_input_dataset)
+add_dependencies(text-classifier copy_test_dataset)

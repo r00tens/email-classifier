@@ -1,5 +1,4 @@
 #include "utils/CsvFileHandler.hpp"
-#include "utils/JsonParser.hpp"
 #include "utils/NaiveBayesCPU.hpp"
 #include "utils/TextProcessor.hpp"
 #include "utils/Timer.hpp"
