@@ -2,16 +2,11 @@
 #define MULTINOMIALNBC_HPP
 
 #include <CSRMatrix.hpp>
+#include <ClassificationLabels.hpp>
 
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-struct ClassificationLabels
-{
-    std::vector<int> predictedLabels;
-    std::vector<int> trueLabels;
-};
 
 class NaiveBayesCPU
 {
