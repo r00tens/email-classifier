@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include "cuda/NaiveBayesGPU.cuh"
+
 void loadTrainingDataset(const std::string& trainingDatasetPath, std::vector<std::vector<std::string>>& trainingData)
 {
     std::cout << "Loading training dataset...";
@@ -239,9 +241,8 @@ void loadSparseFeatureVectors(const std::string& filename, CSRMatrix& sparseFeat
     }
 }
 
-void trainClassifier(NaiveBayesCPU& naiveBayesCPU, const std::vector<int>& trainLabels,
-                     const std::unordered_map<std::string, int>& vocabulary,
-                     const CSRMatrix& csrSparseFeatureVectors)
+void trainClassifier(NaiveBayesCPU& naiveBayesCPU, NaiveBayesGPU& naiveBayesGPU, const std::vector<int>& trainLabels,
+                     const std::unordered_map<std::string, int>& vocabulary, const CSRMatrix& csrSparseFeatureVectors)
 {
     std::cout << "Training classifier...\n";
 
@@ -254,10 +255,10 @@ void trainClassifier(NaiveBayesCPU& naiveBayesCPU, const std::vector<int>& train
 
     std::cout << "CPU: [DONE] [" << std::fixed << std::setprecision(4) << timer.elapsed_time() << " s]\n";
 
-    naiveBayesCPU.printModel();
+    naiveBayesGPU.train(trainLabels, vocabulary, csrSparseFeatureVectors);
 }
 
-void evaluateClassifier(NaiveBayesCPU& naiveBayesCPU, const std::vector<std::string>& testTexts,
+void evaluateClassifier(NaiveBayesCPU& naiveBayesCPU, NaiveBayesGPU& naiveBayesGPU, const CSRMatrix& csrMatrix, const std::vector<std::string>& testTexts,
                         const std::vector<int>& testLabels)
 {
     std::cout << "Evaluating classifier...\n";
@@ -274,6 +275,10 @@ void evaluateClassifier(NaiveBayesCPU& naiveBayesCPU, const std::vector<std::str
     std::cout << "CPU: [DONE] [" << timer.elapsed_time() << " s]\n";
 
     naiveBayesCPU.printEvaluationMetrics();
+
+    naiveBayesGPU.evaluate(csrMatrix, testLabels, POSITIVE_CLASS);
+
+    naiveBayesGPU.printEvaluationMetrics();
 }
 
 auto main(const int argc, char const* argv[]) -> int
@@ -317,8 +322,9 @@ auto main(const int argc, char const* argv[]) -> int
     loadSparseFeatureVectors("sparse-feature-vectors.csv", csrSparseFeatureVectors);
 
     NaiveBayesCPU naiveBayesCPU;
+    NaiveBayesGPU naiveBayesGPU;
 
-    trainClassifier(naiveBayesCPU, trainLabels, vocabulary, csrSparseFeatureVectors);
+    trainClassifier(naiveBayesCPU, naiveBayesGPU, trainLabels, vocabulary, csrSparseFeatureVectors);
 
     std::vector<std::vector<std::string>> testData;
     const std::string testDatasetPath = argv[2];
@@ -330,7 +336,14 @@ auto main(const int argc, char const* argv[]) -> int
 
     extractTextsAndLabels(testData, testTexts, testLabels);
 
-    evaluateClassifier(naiveBayesCPU, testTexts, testLabels);
+    std::vector<std::unordered_map<int, int>> sparseFeatureVectorsTest;
+    CSRMatrix csrSparseFeatureVectorsTest;
+
+    createSparseFeatureVectors(vocabulary, testTexts, sparseFeatureVectorsTest, BATCH_SIZE, "sparse-feature-vectors-test.csv",
+                               true);
+    loadSparseFeatureVectors("sparse-feature-vectors-test.csv", csrSparseFeatureVectorsTest);
+
+    evaluateClassifier(naiveBayesCPU, naiveBayesGPU, csrSparseFeatureVectorsTest, testTexts, testLabels);
 
     return 0;
 }
