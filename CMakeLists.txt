@@ -45,6 +45,7 @@ target_link_libraries(text-classifier ${CUDA_LIBRARIES} ${CUDAToolkit_LIBRARIES}
 
 set_target_properties(text-classifier PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
+        LINK_FLAGS "/NODEFAULTLIB:libcmt.lib"
 )
 
 # Define the path to the training-dataset folder
