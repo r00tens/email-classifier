@@ -1,0 +1,56 @@
+# .clang-tidy configuration file
+# This file sets up checks for static analysis and code style enforcement
+
+Checks: '-*,
+bugprone-*,
+cert-*,
+clang-analyzer-*,
+hicpp-*,
+llvm-*,
+modernize-*,
+performance-*,
+readability-*,
+-bugprone-easily-swappable-parameters'
+
+CheckOptions:
+  # Naming convention for classes and structures
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+
+  # Naming convention for class member variables
+  - key: readability-identifier-naming.MemberCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: m_
+
+  # Naming convention for global constants
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: ALL_CAPS
+
+  # Naming convention for functions and function variables
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+
+  # Naming convention for types (e.g., using, typedef)
+  - key: readability-identifier-naming.TypeAliasCase
+    value: camelBack
+
+  # Naming convention for enumerations
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumConstantCase
+    value: ALL_CAPS
+
+  # Naming convention for namespaces
+  - key: readability-identifier-naming.NamespaceCase
+    value: snake_case
+
+  # Naming convention for constexpr variables
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: UPPER_CASE
