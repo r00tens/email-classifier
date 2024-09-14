@@ -36,6 +36,7 @@ add_executable(text-classifier
         utils/CsvFileHandler.cpp
         utils/TextProcessor.cpp
         utils/NaiveBayesCPU.cpp
+        utils/EvaluationMetrics.cpp
         cuda/CudaTimer.cu
         cuda/GPUInfo.cu
         cuda/NaiveBayesGPU.cu

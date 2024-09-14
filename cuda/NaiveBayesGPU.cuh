@@ -3,8 +3,8 @@
 
 #include "GPUInfo.cuh"
 
+#include "../utils/EvaluationMetrics.hpp"
 #include "CSRMatrix.hpp"
-#include "ClassificationLabels.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -46,15 +46,7 @@ private:
     std::unordered_map<int, double> m_classProbabilitiesLog;
     std::unordered_map<int, std::unordered_map<int, double>> m_featureProbabilitiesLog;
 
-    double m_accuracy{};
-    double m_precision{};
-    double m_recall{};
-    double m_f1Score{};
-
-    void accuracy(const ClassificationLabels& classificationLabels);
-    void precision(const ClassificationLabels& classificationLabels, int positiveClass);
-    void recall(const ClassificationLabels& classificationLabels, int positiveClass);
-    void f1Score();
+    EvaluationMetrics m_evaluationMetrics;
 };
 
 #endif //NAIVEBAYESGPU_CUH
