@@ -29,7 +29,7 @@ cd text-classifier
 
 ### Build the Project:
 
-##### Visual Studio 17 2022
+#### Visual Studio 17 2022
 
 ```
 mkdir build
