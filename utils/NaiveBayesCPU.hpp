@@ -1,5 +1,5 @@
-#ifndef MULTINOMIALNBC_HPP
-#define MULTINOMIALNBC_HPP
+#ifndef NAIVEBAYESCPU_HPP
+#define NAIVEBAYESCPU_HPP
 
 #include "EvaluationMetrics.hpp"
 #include <CSRMatrix.hpp>
@@ -37,4 +37,4 @@ private:
     EvaluationMetrics m_evaluationMetrics;
 };
 
-#endif //MULTINOMIALNBC_HPP
+#endif //NAIVEBAYESCPU_HPP
