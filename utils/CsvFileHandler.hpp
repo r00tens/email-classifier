@@ -17,6 +17,9 @@ public:
     static auto readDataToMap(const std::string& filename) -> std::unordered_map<K, V>;
 
     template <typename K, typename V>
+    static auto readDataToUMap(const std::string& filename) -> std::vector<std::unordered_map<K, V>>;
+
+    template <typename K, typename V>
     static void writeData(const std::string& filename, const std::unordered_map<K, V>& data,
                           const std::string& keyColumnName = "key", const std::string& valueColumnName = "value");
 
@@ -69,6 +72,50 @@ auto CsvFileHandler::readDataToMap(const std::string& filename) -> std::unordere
         valueStream >> value;
 
         data[key] = value;
+    }
+
+    file.close();
+
+    return data;
+}
+
+template <typename K, typename V>
+auto CsvFileHandler::readDataToUMap(const std::string& filename) -> std::vector<std::unordered_map<K, V>>
+{
+    std::vector<std::unordered_map<int, int>> data;
+    std::ifstream file(filename);
+
+    if (!file.is_open())
+    {
+        throw std::runtime_error("Failed to open file: " + filename);
+    }
+
+    std::string line;
+    bool isFirstLine = true;
+
+    while (std::getline(file, line))
+    {
+        if (isFirstLine)
+        {
+            isFirstLine = false;
+            continue;
+        }
+
+        std::stringstream lineStream(line);
+        int vectorIndex, key, value;
+        char delimiter;
+
+        if (!(lineStream >> vectorIndex >> delimiter >> key >> delimiter >> value) || delimiter != ',')
+        {
+            throw std::runtime_error("Incorrect format in row: " + line);
+        }
+
+        if (vectorIndex >= data.size())
+        {
+            data.resize(vectorIndex + 1);
+        }
+
+        data[vectorIndex][key] = value;
     }
 
     file.close();
