@@ -6,6 +6,17 @@
 #include <iostream>
 #include <numeric>
 
+/**
+ * @details
+ * Funkcja calculateBlockAndGridSize() wykorzystuje funkcję cudaOccupancyMaxPotentialBlockSize, aby obliczyć
+ * optymalny rozmiar bloku i liczbę bloków dla podanego kernela. W zależności od wybranej strategii zaokrąglania,
+ * rozmiar bloku jest odpowiednio modyfikowany.
+ *
+ * @details
+ * The calculateBlockAndGridSize() function uses cudaOccupancyMaxPotentialBlockSize to calculate
+ * the optimal block size and number of blocks for the given kernel. Depending on the selected
+ * rounding strategy, the block size is adjusted accordingly.
+ */
 template <typename KernelFunc>
 void NaiveBayesGPU::calculateBlockAndGridSize(KernelFunc kernel, const size_t dataSize, int& numBlocks, int& blockSize,
                                               size_t dynamicSharedMem, const RoundingStrategy strategy)
@@ -37,6 +48,17 @@ void NaiveBayesGPU::calculateBlockAndGridSize(KernelFunc kernel, const size_t da
     numBlocks = std::max(numBlocks, minGridSize);
 }
 
+/**
+ * @details
+ * Kernel countClassesKernel() oblicza liczność każdej klasy, zliczając wystąpienia etykiet w zbiorze danych.
+ * Wynik jest zapisywany w tablicy classCounts, używając operacji atomowej, aby zapewnić poprawność wyników
+ * w środowisku wielowątkowym.
+ *
+ * @details
+ * The countClassesKernel() calculates the count of each class by counting occurrences of labels in the dataset.
+ * The result is stored in the classCounts array using an atomic operation to ensure correctness in a multi-threaded
+ * environment.
+ */
 __global__ void countClassesKernel(int* classCounts, const int* labels, const size_t numSamples)
 {
     const unsigned int idx = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -47,6 +69,17 @@ __global__ void countClassesKernel(int* classCounts, const int* labels, const si
     }
 }
 
+/**
+ * @details
+ * Kernel countFeaturesKernel() iteruje przez rzadkie wektory cech dla każdej próbki, zliczając wystąpienia cech
+ * (indeksów słów) dla każdej klasy. Dla każdego wiersza macierzy CSR (próbki) funkcja atomicAdd dodaje liczbę
+ * wystąpień cech do odpowiedniego miejsca w tablicy zliczeń dla cech (featureCounts).
+ *
+ * @details
+ * The countFeaturesKernel() iterates through sparse feature vectors for each sample, counting occurrences
+ * of features (word indices) for each class. For each row of the CSR matrix (sample), the atomicAdd function
+ * adds the number of feature occurrences to the appropriate position in the featureCounts array.
+ */
 __global__ void countFeaturesKernel(int* featureCounts, const int* trainLabels, const size_t* rowPointers,
                                     const size_t* columnIndices, const int* values, const size_t numSamples,
                                     const size_t vocabularySize)
@@ -70,6 +103,17 @@ __global__ void countFeaturesKernel(int* featureCounts, const int* trainLabels, 
     }
 }
 
+/**
+ * @details
+ * Kernel calculateClassProbabilitiesKernel() oblicza logarytmiczne prawdopodobieństwa klas na podstawie zliczeń
+ * klas i liczby wszystkich próbek. Każdy wątek przetwarza jedną klasę, obliczając logarytm prawdopodobieństwa
+ * dla tej klasy. Bloki organizują wątki, ale każdy wątek oblicza wartość dla jednej klasy, niezależnie od innych.
+ *
+ * @details
+ * The calculateClassProbabilitiesKernel() calculates the log probabilities of classes based on class counts
+ * and the total number of samples. Each thread processes one class, calculating the log probability for that class.
+ * Blocks organize threads, but each thread computes the value for one class independently.
+ */
 __global__ void calculateClassProbabilitiesKernel(double* classProbabilitiesLog, const int* classCounts,
                                                   const size_t totalSamples, const int numClasses)
 {
@@ -81,6 +125,19 @@ __global__ void calculateClassProbabilitiesKernel(double* classProbabilitiesLog,
     }
 }
 
+/**
+ * @details
+ * Kernel calculateTotalFeatureCountKernel() oblicza całkowitą liczbę cech dla każdej klasy. Każdy wątek przetwarza
+ * kombinację klasy i cechy (indeksu słowa). Wątek wykonuje operację atomową `atomicAdd`, aby dodać wystąpienia
+ * cech dla danej klasy do globalnej tablicy `dTotalFeatureCounts`. Bloki organizują wątki, ale każdy wątek przetwarza
+ * inną kombinację klasy i cechy.
+ *
+ * @details
+ * The calculateTotalFeatureCountKernel() calculates the total count of features for each class. Each thread processes
+ * a combination of class and feature (word index). The thread performs an atomic operation `atomicAdd` to add the
+ * feature occurrences for that class to the global `dTotalFeatureCounts` array. Blocks organize threads, but each
+ * thread processes a different class-feature combination.
+ */
 __global__ void calculateTotalFeatureCountKernel(int* dTotalFeatureCounts, const int* dFeatureCounts,
                                                  const size_t vocabularySize, const int numClasses)
 {
@@ -94,6 +151,19 @@ __global__ void calculateTotalFeatureCountKernel(int* dTotalFeatureCounts, const
     }
 }
 
+/**
+ * @details
+ * Kernel calculateFeatureProbabilitiesKernel() oblicza logarytmiczne prawdopodobieństwa cech dla każdej klasy,
+ * uwzględniając wygładzanie Laplace'a. Każdy wątek przetwarza jedną kombinację klasy i cechy, korzystając ze wzoru:
+ * P(feature | class) = (featureCount + 1) / (totalFeatureCount + vocabularySize). Wynik jest logarytmowany
+ * i zapisany w tablicy dFeatureProbabilitiesLog.
+ *
+ * @details
+ * The calculateFeatureProbabilitiesKernel() calculates the log probabilities of features for each class, applying
+ * Laplace smoothing. Each thread processes one class-feature combination using the formula:
+ * P(feature | class) = (featureCount + 1) / (totalFeatureCount + vocabularySize). The result is log-transformed and
+ * stored in the dFeatureProbabilitiesLog array.
+ */
 __global__ void calculateFeatureProbabilitiesKernel(double* dFeatureProbabilitiesLog, const int* dFeatureCounts,
                                                     const int* dTotalFeatureCounts, const size_t vocabularySize,
                                                     const int numClasses)
@@ -146,6 +216,19 @@ __global__ void calculateFeatureProbabilitiesKernel(double* dFeatureProbabilitie
 //     }
 // }
 
+/**
+ * @details
+ * Kernel predictKernel() przewiduje klasę dla każdej próbki, obliczając logarytmiczne prawdopodobieństwo dla każdej klasy.
+ * Każdy wątek przetwarza jedną klasę dla danej próbki, iterując przez jej cechy i dodając odpowiednie logarytmiczne
+ * prawdopodobieństwa cech do logarytmu prawdopodobieństwa klasy. Wynik dla każdej klasy jest zapisywany w tablicy
+ * dLogProbabilities.
+ *
+ * @details
+ * The predictKernel() predicts the class for each sample by calculating the log probability for each class.
+ * Each thread processes one class for a given sample, iterating over its features and adding the corresponding
+ * log feature probabilities to the class log probability. The result for each class is stored in the
+ * dLogProbabilities array.
+ */
 __global__ void predictKernel(double* dLogProbabilities, const size_t* dRowPointers, const size_t* dColumnIndices,
                               const int* dValues, const double* dClassProbabilitiesLog,
                               const double* dFeatureProbabilitiesLog, const size_t vocabularySize, const int numClasses,
@@ -180,7 +263,17 @@ __global__ void predictKernel(double* dLogProbabilities, const size_t* dRowPoint
     }
 }
 
-
+/**
+ * @details
+ * Funkcja train() alokuje pamięć na urządzeniu, kopiuje dane z hosta na GPU, a następnie wywołuje odpowiednie kernele,
+ * aby wytrenować model Naive Bayes. Po zakończeniu obliczeń wynikowe prawdopodobieństwa i zliczenia są kopiowane
+ * z powrotem na hosta, gdzie są zapisywane w odpowiednich strukturach danych.
+ *
+ * @details
+ * The train() function allocates memory on the device, copies data from the host to the GPU, and then invokes the
+ * appropriate kernels to train the Naive Bayes model. After computations, the resulting probabilities and counts
+ * are copied back to the host, where they are stored in the corresponding data structures.
+ */
 void NaiveBayesGPU::train(const std::vector<int>& trainLabels, const std::unordered_map<std::string, int>& vocabulary,
                           const CSRMatrix& featureVectorsCSR)
 {
@@ -325,6 +418,23 @@ void NaiveBayesGPU::train(const std::vector<int>& trainLabels, const std::unorde
         " s]\n";
 }
 
+/**
+ * @details
+ * Funkcja predictBatch() przewiduje etykiety dla grupy próbek, wykorzystując macierz rzadkich wektorów cech (CSR)
+ * oraz wcześniej wyliczone prawdopodobieństwa klas i cech. Najpierw alokowane są zasoby GPU, w tym pamięć dla
+ * logarytmicznych prawdopodobieństw klas i cech, a także struktury danych CSR. Dane są kopiowane z hosta na urządzenie,
+ * a następnie kernel predictKernel() jest uruchamiany w celu przewidzenia klas.
+ * Wynikowe prawdopodobieństwa logarytmiczne dla każdej klasy są kopiowane z powrotem na hosta, gdzie następuje
+ * wybór klasy o najwyższym prawdopodobieństwie dla każdej próbki. Na końcu zasoby GPU są zwalniane.
+ *
+ * @details
+ * The predictBatch() function predicts labels for a batch of samples, using a sparse feature vector matrix (CSR) and
+ * precomputed class and feature probabilities. First, GPU resources are allocated, including memory for log
+ * probabilities of classes and features, as well as CSR data structures. The data is copied from the host to the
+ * device, and the predictKernel() is launched to perform the label prediction. The resulting log probabilities
+ * for each class are copied back to the host, where the class with the highest probability for each sample is selected.
+ * Finally, the GPU resources are freed.
+ */
 auto NaiveBayesGPU::predictBatch(const std::vector<int>& trainLabels, const CSRMatrix& featureVectorsCSR,
                                  const size_t numSamples) -> std::vector<int>
 {
@@ -445,7 +555,17 @@ auto NaiveBayesGPU::predictBatch(const std::vector<int>& trainLabels, const CSRM
     return predictedClasses;
 }
 
-
+/**
+ * @details
+ * Funkcja evaluate() najpierw przewiduje etykiety dla próbek testowych przy użyciu metody predictBatch().
+ * Następnie porównuje przewidywane etykiety z prawdziwymi etykietami, obliczając metryki ewaluacyjne, takie jak
+ * dokładność, precyzja, czułość (recall) oraz F1-score. Wyniki są przechowywane w obiekcie m_evaluationMetrics.
+ *
+ * @details
+ * The evaluate() function first predicts the labels for the test samples using the predictBatch() method.
+ * It then compares the predicted labels with the true labels, calculating evaluation metrics such as
+ * accuracy, precision, recall, and F1-score. The results are stored in the m_evaluationMetrics object.
+ */
 void NaiveBayesGPU::evaluate(const CSRMatrix& featureVectorsCSR, const std::vector<int>& trueLabels, int positiveClass)
 {
     const size_t numSamples = trueLabels.size();
