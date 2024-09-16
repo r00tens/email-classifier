@@ -218,7 +218,8 @@ void createSparseFeatureVectors(const std::unordered_map<std::string, int>& voca
     }
 }
 
-void loadSparseFeatureVectors(const std::string& filename, CSRMatrix& sparseFeatureVectors)
+template <typename T>
+void loadSparseFeatureVectors(const std::string& filename, T& sparseFeatureVectors)
 {
     std::cout << "Loading sparse feature vectors...";
 
@@ -227,7 +228,14 @@ void loadSparseFeatureVectors(const std::string& filename, CSRMatrix& sparseFeat
         Timer timer;
         timer.start();
 
-        sparseFeatureVectors = loadSparseFeatureVectorsToCSR(filename);
+        if constexpr (std::is_same_v<T, std::vector<std::unordered_map<int, int>>>)
+        {
+            sparseFeatureVectors = CsvFileHandler::readDataToUMap<int, int>(filename);
+        }
+        else if constexpr (std::is_same_v<T, CSRMatrix>)
+        {
+            sparseFeatureVectors = loadSparseFeatureVectorsToCSR(filename);
+        }
 
         timer.stop();
 
@@ -257,7 +265,9 @@ void trainClassifier(NaiveBayesCPU& naiveBayesCPU, NaiveBayesGPU& naiveBayesGPU,
     naiveBayesGPU.train(trainLabels, vocabulary, csrSparseFeatureVectors);
 }
 
-void evaluateClassifier(NaiveBayesCPU& naiveBayesCPU, NaiveBayesGPU& naiveBayesGPU, const CSRMatrix& csrMatrix, const std::vector<std::string>& testTexts,
+void evaluateClassifier(NaiveBayesCPU& naiveBayesCPU, NaiveBayesGPU& naiveBayesGPU,
+                        const std::vector<std::unordered_map<int, int>>& testFeatureVectors, const CSRMatrix& csrMatrix,
+                        const std::vector<std::string>& testTexts,
                         const std::vector<int>& testLabels)
 {
     std::cout << "Evaluating classifier...\n";
@@ -267,7 +277,7 @@ void evaluateClassifier(NaiveBayesCPU& naiveBayesCPU, NaiveBayesGPU& naiveBayesG
 
     constexpr int POSITIVE_CLASS = 1;
 
-    naiveBayesCPU.evaluate(testTexts, testLabels, POSITIVE_CLASS);
+    naiveBayesCPU.evaluate(testFeatureVectors, testLabels, POSITIVE_CLASS);
 
     timer.stop();
 
@@ -338,11 +348,15 @@ auto main(const int argc, char const* argv[]) -> int
     std::vector<std::unordered_map<int, int>> sparseFeatureVectorsTest;
     CSRMatrix csrSparseFeatureVectorsTest;
 
-    createSparseFeatureVectors(vocabulary, testTexts, sparseFeatureVectorsTest, BATCH_SIZE, "sparse-feature-vectors-test.csv",
+    createSparseFeatureVectors(vocabulary, testTexts, sparseFeatureVectorsTest, BATCH_SIZE,
+                               "sparse-feature-vectors-test.csv",
                                true);
+
+    loadSparseFeatureVectors("sparse-feature-vectors-test.csv", sparseFeatureVectorsTest);
     loadSparseFeatureVectors("sparse-feature-vectors-test.csv", csrSparseFeatureVectorsTest);
 
-    evaluateClassifier(naiveBayesCPU, naiveBayesGPU, csrSparseFeatureVectorsTest, testTexts, testLabels);
+    evaluateClassifier(naiveBayesCPU, naiveBayesGPU, sparseFeatureVectorsTest, csrSparseFeatureVectorsTest, testTexts,
+                       testLabels);
 
     return 0;
 }

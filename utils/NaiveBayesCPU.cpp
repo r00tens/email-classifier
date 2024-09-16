@@ -46,16 +46,50 @@ auto NaiveBayesCPU::predict(const std::string& text) -> int
     })->first;
 }
 
-void NaiveBayesCPU::evaluate(const std::vector<std::string>& testTexts, const std::vector<int>& trueLabels,
+auto NaiveBayesCPU::predictBatch(
+    const std::vector<std::unordered_map<int, int>>& featureVectorsTest) -> std::vector<int>
+{
+    std::vector<int> predictions;
+
+    for (const auto& featureVector : featureVectorsTest)
+    {
+        std::unordered_map<int, double> logProbabilities = m_classProbabilitiesLog;
+
+        for (const auto& label : m_classProbabilitiesLog | std::views::keys)
+        {
+            for (const auto& [feature_index, count] : featureVector)
+            {
+                if (m_featureProbabilitiesLog.at(label).contains(feature_index))
+                {
+                    logProbabilities[label] += count * m_featureProbabilitiesLog.at(label).at(feature_index);
+                }
+                else
+                {
+                    logProbabilities[label] += count * std::log(1.0 / static_cast<double>(m_vocabulary.size() + 1));
+                }
+            }
+        }
+
+        // Znalezienie etykiety z najwyższą wartością logarytmicznego prawdopodobieństwa
+        int predictedLabel = std::ranges::max_element(logProbabilities, [](const auto& logProbA, const auto& logProbB)
+        {
+            return logProbA.second < logProbB.second;
+        })->first;
+
+        predictions.push_back(predictedLabel);
+    }
+
+    return predictions;
+}
+
+
+void NaiveBayesCPU::evaluate(const std::vector<std::unordered_map<int, int>>& featureVectorsTest,
+                             const std::vector<int>& trueLabels,
                              const int positiveClass)
 {
     ClassificationLabels classificationLabels;
 
-    for (const auto& text : testTexts)
-    {
-        classificationLabels.predictedLabels.push_back(predict(text));
-    }
-
+    classificationLabels.predictedLabels = predictBatch(featureVectorsTest);
     classificationLabels.trueLabels = trueLabels;
 
     m_evaluationMetrics.accuracy(classificationLabels);

@@ -15,8 +15,10 @@ public:
                const CSRMatrix& featureVectorsCSR);
 
     auto predict(const std::string& text) -> int;
+    auto predictBatch(const std::vector<std::unordered_map<int, int>>& featureVectorsTest) -> std::vector<int>;
 
-    void evaluate(const std::vector<std::string>& testTexts, const std::vector<int>& trueLabels, int positiveClass);
+    void evaluate(const std::vector<std::unordered_map<int, int>>& featureVectorsTest,
+                  const std::vector<int>& trueLabels, int positiveClass);
 
     void printModel() const;
     void printEvaluationMetrics() const;
