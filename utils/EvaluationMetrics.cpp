@@ -1,5 +1,6 @@
 #include "EvaluationMetrics.hpp"
 
+#include <iomanip>
 #include <iostream>
 
 void EvaluationMetrics::accuracy(const ClassificationLabels& classificationLabels)
@@ -85,11 +86,27 @@ void EvaluationMetrics::f1Score()
 
 void EvaluationMetrics::printEvaluationMetrics() const
 {
-    std::cout << "Evaluation metrics:\n";
-    std::cout << "Accuracy: " << m_accuracy << '\n';
-    std::cout << "Precision: " << m_precision << '\n';
-    std::cout << "Recall: " << m_recall << '\n';
-    std::cout << "F1 Score: " << m_f1Score << '\n';
+    constexpr int FIELD_WIDTH = 12;
+    constexpr int TABLE_WIDTH = 61;
+    constexpr int PRECISION = 4;
+
+    std::cout << std::string(TABLE_WIDTH, '-') << '\n';
+
+    std::cout << "| " << std::setw(FIELD_WIDTH) << "accuracy"
+        << " | " << std::setw(FIELD_WIDTH) << "precision"
+        << " | " << std::setw(FIELD_WIDTH) << "recall"
+        << " | " << std::setw(FIELD_WIDTH) << "f1-score"
+        << " | " << '\n';
+
+    std::cout << std::string(TABLE_WIDTH, '-') << '\n';
+
+    std::cout << "| " << std::setw(FIELD_WIDTH) << std::fixed << std::setprecision(PRECISION) << m_accuracy
+        << " | " << std::setw(FIELD_WIDTH) << std::fixed << std::setprecision(PRECISION) << m_precision
+        << " | " << std::setw(FIELD_WIDTH) << std::fixed << std::setprecision(PRECISION) << m_recall
+        << " | " << std::setw(FIELD_WIDTH) << std::fixed << std::setprecision(PRECISION) << m_f1Score
+        << " | " << '\n';
+
+    std::cout << std::string(TABLE_WIDTH, '-') << '\n';
 }
 
 auto EvaluationMetrics::getAccuracy() const -> double

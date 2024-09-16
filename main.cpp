@@ -6,6 +6,7 @@
 #include "data-structures/CSRMatrix.hpp"
 
 #include <iostream>
+#include <unordered_set>
 
 #include "cuda/NaiveBayesGPU.cuh"
 
@@ -272,22 +273,32 @@ void evaluateClassifier(NaiveBayesCPU& naiveBayesCPU, NaiveBayesGPU& naiveBayesG
 {
     std::cout << "Evaluating classifier...\n";
 
-    Timer timer;
-    timer.start();
+    std::unordered_set uniqueClasses(testLabels.begin(), testLabels.end());
 
-    constexpr int POSITIVE_CLASS = 1;
+    for (const int classLabel : uniqueClasses)
+    {
+        Timer timer;
+        timer.start();
 
-    naiveBayesCPU.evaluate(testFeatureVectors, testLabels, POSITIVE_CLASS);
+        std::cout << "Positive class: " << classLabel << '\n';
 
-    timer.stop();
+        naiveBayesCPU.evaluate(testFeatureVectors, testLabels, classLabel);
 
-    std::cout << "CPU: [DONE] [" << timer.elapsed_time() << " s]\n";
+        timer.stop();
 
-    naiveBayesCPU.printEvaluationMetrics();
+        std::cout << "CPU: [DONE] [" << timer.elapsed_time() << " s]\n";
 
-    naiveBayesGPU.evaluate(csrMatrix, testLabels, POSITIVE_CLASS);
+        naiveBayesCPU.printEvaluationMetrics();
+    }
 
-    naiveBayesGPU.printEvaluationMetrics();
+    for (const int classLabel : uniqueClasses)
+    {
+        std::cout << "Positive class: " << classLabel << '\n';
+
+        naiveBayesGPU.evaluate(csrMatrix, testLabels, classLabel);
+
+        naiveBayesGPU.printEvaluationMetrics();
+    }
 }
 
 void compareModels(const NaiveBayesCPU& cpuModel, const NaiveBayesGPU& gpuModel)
