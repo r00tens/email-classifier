@@ -1,5 +1,5 @@
-#include "NaiveBayesGPU.cuh"
 #include "CudaTimer.cuh"
+#include "NaiveBayesGPU.cuh"
 
 #include "../utils/Timer.hpp"
 
@@ -225,49 +225,33 @@ void NaiveBayesGPU::train(const std::vector<int>& trainLabels, const std::unorde
     cudaMemset(dFeatureCounts, 0, numClasses * vocabularySize * sizeof(int));
     cudaMemset(dTotalFeatureCounts, 0, numClasses * sizeof(int));
 
-    // int minGridSize;
     int blockSize;
     int numBlocks;
 
     CudaTimer cudaTimer;
     cudaTimer.start();
 
-    // cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, countClassesKernel, 0, 1024);
-    // int numBlocks = (static_cast<int>(numSamples) + blockSize - 1) / blockSize;
-    // numBlocks = std::max(numBlocks, minGridSize);
     calculateBlockAndGridSize(countClassesKernel, numSamples, numBlocks, blockSize);
     countClassesKernel<<<numBlocks, blockSize>>>(dClassCounts, dTrainLabels, numSamples);
 
     cudaDeviceSynchronize();
 
-    // cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, countFeaturesKernel, 0, 1024);
-    // numBlocks = (static_cast<int>(numSamples) + blockSize - 1) / blockSize;
-    // numBlocks = std::max(numBlocks, minGridSize);
     calculateBlockAndGridSize(countFeaturesKernel, numSamples, numBlocks, blockSize);
     countFeaturesKernel<<<numBlocks, blockSize>>>(dFeatureCounts, dTrainLabels, dRowPointers, dColumnIndices, dValues,
                                                   numSamples, vocabularySize);
     cudaDeviceSynchronize();
 
-    // cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, calculateClassProbabilitiesKernel, 0, 1024);
-    // numBlocks = (numClasses + blockSize - 1) / blockSize;
-    // numBlocks = std::max(numBlocks, minGridSize);
     calculateBlockAndGridSize(calculateClassProbabilitiesKernel, numClasses, numBlocks, blockSize);
     calculateClassProbabilitiesKernel<<<numBlocks, blockSize>>>(dClassProbabilitiesLog, dClassCounts, numSamples,
                                                                 numClasses);
     cudaDeviceSynchronize();
 
-    // cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, calculateTotalFeatureCountKernel, 0, 1024);
-    // numBlocks = (numClasses * static_cast<int>(vocabularySize) + blockSize - 1) / blockSize;
-    // numBlocks = std::max(numBlocks, minGridSize);
     calculateBlockAndGridSize(calculateTotalFeatureCountKernel, numClasses * vocabularySize, numBlocks, blockSize);
     calculateTotalFeatureCountKernel<<<numBlocks, blockSize>>>(dTotalFeatureCounts, dFeatureCounts, vocabularySize,
                                                                numClasses);
 
     cudaDeviceSynchronize();
 
-    // cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, calculateFeatureProbabilitiesKernel, 0, 1024);
-    // numBlocks = (numClasses * static_cast<int>(vocabularySize) + blockSize - 1) / blockSize;
-    // numBlocks = std::max(numBlocks, minGridSize);
     calculateBlockAndGridSize(calculateFeatureProbabilitiesKernel, numClasses * vocabularySize, numBlocks, blockSize);
     calculateFeatureProbabilitiesKernel<<<numBlocks, blockSize>>>(dFeatureProbabilitiesLog, dFeatureCounts,
                                                                   dTotalFeatureCounts, vocabularySize, numClasses);
@@ -464,32 +448,6 @@ auto NaiveBayesGPU::predictBatch(const std::vector<int>& trainLabels, const CSRM
 
 void NaiveBayesGPU::evaluate(const CSRMatrix& featureVectorsCSR, const std::vector<int>& trueLabels, int positiveClass)
 {
-    // const size_t numSamples = trueLabels.size();
-    // std::vector<int> predictedLabels(numSamples);
-    //
-    // for (int idx{}; idx < numSamples; idx++)
-    // {
-    //     predictedLabels[idx] = predict(trueLabels, featureVectorsCSR, idx);
-    // }
-    //
-    // accuracy(predictedLabels, trueLabels);
-
-    // const size_t numSamples = trueLabels.size();
-    //
-    // ClassificationLabels classificationLabels;
-    //
-    // for (int idx{}; idx < numSamples; idx++)
-    // {
-    //     classificationLabels.predictedLabels.push_back(predict(trueLabels, featureVectorsCSR, idx));
-    // }
-    //
-    // classificationLabels.trueLabels = trueLabels;
-    //
-    // accuracy(classificationLabels);
-    // precision(classificationLabels, positiveClass);
-    // recall(classificationLabels, positiveClass);
-    // f1Score();
-
     const size_t numSamples = trueLabels.size();
 
     ClassificationLabels classificationLabels;
