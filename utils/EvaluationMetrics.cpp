@@ -91,3 +91,31 @@ void EvaluationMetrics::printEvaluationMetrics() const
     std::cout << "Recall: " << m_recall << '\n';
     std::cout << "F1 Score: " << m_f1Score << '\n';
 }
+
+auto EvaluationMetrics::getAccuracy() const -> double
+{
+    return m_accuracy;
+}
+
+auto EvaluationMetrics::getPrecision() const -> double
+{
+    return m_precision;
+}
+
+auto EvaluationMetrics::getRecall() const -> double
+{
+    return m_recall;
+}
+
+auto EvaluationMetrics::getF1Score() const -> double
+{
+    return m_f1Score;
+}
+
+auto EvaluationMetrics::operator==(const EvaluationMetrics& other) const -> bool
+{
+    return m_accuracy == other.m_accuracy &&
+        m_precision == other.m_precision &&
+        m_recall == other.m_recall &&
+        m_f1Score == other.m_f1Score;
+}

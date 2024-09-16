@@ -29,12 +29,21 @@ public:
 
     // [[nodiscard]] auto predict(const std::vector<int>& trainLabels, const CSRMatrix& featureVectorsCSR, int sampleIdx) -> int;
     auto predictBatch(const std::vector<int>& trainLabels,
-                                                 const CSRMatrix& featureVectorsCSR,
-                                                 size_t numSamples) -> std::vector<int>;
+                      const CSRMatrix& featureVectorsCSR,
+                      size_t numSamples) -> std::vector<int>;
 
     void evaluate(const CSRMatrix& featureVectorsCSR, const std::vector<int>& trueLabels, int positiveClass);
 
     void printEvaluationMetrics() const;
+
+    [[nodiscard]] auto getVocabulary() const -> std::unordered_map<std::string, int>;
+
+    [[nodiscard]] auto getClassCounts() const -> std::unordered_map<int, int>;
+    [[nodiscard]] auto getFeatureCounts() const -> std::unordered_map<int, std::unordered_map<int, int>>;
+    [[nodiscard]] auto getClassProbabilitiesLog() const -> std::unordered_map<int, double>;
+    [[nodiscard]] auto getFeatureProbabilitiesLog() const -> std::unordered_map<int, std::unordered_map<int, double>>;
+
+    [[nodiscard]] auto getEvaluationMetrics() const -> EvaluationMetrics;
 
 private:
     GPUInfo m_gpuInfo;

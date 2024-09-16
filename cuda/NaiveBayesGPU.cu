@@ -507,3 +507,33 @@ void NaiveBayesGPU::printEvaluationMetrics() const
 {
     m_evaluationMetrics.printEvaluationMetrics();
 }
+
+auto NaiveBayesGPU::getVocabulary() const -> std::unordered_map<std::string, int>
+{
+    return m_vocabulary;
+}
+
+auto NaiveBayesGPU::getClassCounts() const -> std::unordered_map<int, int>
+{
+    return m_classCounts;
+}
+
+auto NaiveBayesGPU::getFeatureCounts() const -> std::unordered_map<int, std::unordered_map<int, int>>
+{
+    return m_featureCounts;
+}
+
+auto NaiveBayesGPU::getClassProbabilitiesLog() const -> std::unordered_map<int, double>
+{
+    return m_classProbabilitiesLog;
+}
+
+auto NaiveBayesGPU::getFeatureProbabilitiesLog() const -> std::unordered_map<int, std::unordered_map<int, double>>
+{
+    return m_featureProbabilitiesLog;
+}
+
+auto NaiveBayesGPU::getEvaluationMetrics() const -> EvaluationMetrics
+{
+    return m_evaluationMetrics;
+}

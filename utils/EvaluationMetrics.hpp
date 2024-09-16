@@ -12,6 +12,13 @@ public:
     void f1Score();
     void printEvaluationMetrics() const;
 
+    auto getAccuracy() const -> double;
+    auto getPrecision() const -> double;
+    auto getRecall() const -> double;
+    auto getF1Score() const -> double;
+
+    auto operator==(const EvaluationMetrics& other) const -> bool;
+
 private:
     double m_accuracy{};
     double m_precision{};

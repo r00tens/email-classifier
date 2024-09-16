@@ -4,6 +4,8 @@
 #include "EvaluationMetrics.hpp"
 #include <CSRMatrix.hpp>
 
+#include "../cuda/NaiveBayesGPU.cuh"
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -22,6 +24,17 @@ public:
 
     void printModel() const;
     void printEvaluationMetrics() const;
+
+    [[nodiscard]] auto getVocabulary() const -> std::unordered_map<std::string, int>;
+
+    [[nodiscard]] auto getClassCounts() const -> std::unordered_map<int, int>;
+    [[nodiscard]] auto getFeatureCounts() const -> std::unordered_map<int, std::unordered_map<int, int>>;
+    [[nodiscard]] auto getClassProbabilitiesLog() const -> std::unordered_map<int, double>;
+    [[nodiscard]] auto getFeatureProbabilitiesLog() const -> std::unordered_map<int, std::unordered_map<int, double>>;
+
+    [[nodiscard]] auto getEvaluationMetrics() const -> EvaluationMetrics;
+
+    auto operator==(const NaiveBayesGPU& other) const -> bool;
 
 private:
     std::unordered_map<std::string, int> m_vocabulary;

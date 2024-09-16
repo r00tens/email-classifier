@@ -290,6 +290,21 @@ void evaluateClassifier(NaiveBayesCPU& naiveBayesCPU, NaiveBayesGPU& naiveBayesG
     naiveBayesGPU.printEvaluationMetrics();
 }
 
+void compareModels(const NaiveBayesCPU& cpuModel, const NaiveBayesGPU& gpuModel)
+{
+    std::cout << "Comparing models... ";
+
+    Timer timer;
+    timer.start();
+
+    const bool isEqual = cpuModel == gpuModel;
+
+    timer.stop();
+
+    std::cout << "[DONE] [" << timer.elapsed_time() << " s]\n";
+    std::cout << "Models are " << (isEqual ? "equal" : "not equal") << '\n';
+}
+
 auto main(const int argc, char const* argv[]) -> int
 {
     constexpr int MIN_ARGC = 5;
@@ -357,6 +372,8 @@ auto main(const int argc, char const* argv[]) -> int
 
     evaluateClassifier(naiveBayesCPU, naiveBayesGPU, sparseFeatureVectorsTest, csrSparseFeatureVectorsTest, testTexts,
                        testLabels);
+
+    compareModels(naiveBayesCPU, naiveBayesGPU);
 
     return 0;
 }

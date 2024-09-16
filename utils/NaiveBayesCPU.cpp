@@ -179,3 +179,88 @@ void NaiveBayesCPU::calculateFeatureProbabilities()
         }
     }
 }
+
+auto NaiveBayesCPU::getVocabulary() const -> std::unordered_map<std::string, int>
+{
+    return m_vocabulary;
+}
+
+auto NaiveBayesCPU::getClassCounts() const -> std::unordered_map<int, int>
+{
+    return m_classCounts;
+}
+
+auto NaiveBayesCPU::getFeatureCounts() const -> std::unordered_map<int, std::unordered_map<int, int>>
+{
+    return m_featureCounts;
+}
+
+auto NaiveBayesCPU::getClassProbabilitiesLog() const -> std::unordered_map<int, double>
+{
+    return m_classProbabilitiesLog;
+}
+
+auto NaiveBayesCPU::getFeatureProbabilitiesLog() const -> std::unordered_map<int, std::unordered_map<int, double>>
+{
+    return m_featureProbabilitiesLog;
+}
+
+auto NaiveBayesCPU::getEvaluationMetrics() const -> EvaluationMetrics
+{
+    return m_evaluationMetrics;
+}
+
+auto NaiveBayesCPU::operator==(const NaiveBayesGPU& other) const -> bool
+{
+    constexpr double EPSILON = 1e-12;
+
+    if (!(m_vocabulary == other.getVocabulary() &&
+        m_classCounts == other.getClassCounts() &&
+        m_featureCounts == other.getFeatureCounts() &&
+        m_classProbabilitiesLog == other.getClassProbabilitiesLog() &&
+        m_evaluationMetrics == other.getEvaluationMetrics()))
+    {
+        return false;
+    }
+
+    const auto& otherFeatureProbabilities = other.getFeatureProbabilitiesLog();
+
+    if (m_featureProbabilitiesLog.size() != otherFeatureProbabilities.size())
+    {
+        return false;
+    }
+
+    for (const auto& [label, featureMap] : m_featureProbabilitiesLog)
+    {
+        auto otherFeatureMapIt = otherFeatureProbabilities.find(label);
+
+        if (otherFeatureMapIt == otherFeatureProbabilities.end())
+        {
+            return false;
+        }
+
+        const auto& otherFeatureMap = otherFeatureMapIt->second;
+
+        if (featureMap.size() != otherFeatureMap.size())
+        {
+            return false;
+        }
+
+        for (const auto& [featureIndex, probability] : featureMap)
+        {
+            auto otherProbabilityIt = otherFeatureMap.find(featureIndex);
+
+            if (otherProbabilityIt == otherFeatureMap.end())
+            {
+                return false;
+            }
+
+            if (std::abs(probability - otherProbabilityIt->second) >= EPSILON)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
