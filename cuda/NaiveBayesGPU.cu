@@ -32,9 +32,9 @@ void NaiveBayesGPU::calculateBlockAndGridSize(KernelFunc kernel, const size_t da
         break;
     }
 
-    numBlocks = (static_cast<int>(dataSize) + blockSize - 1) / blockSize;
+    numBlocks = GPUInfo::calculateNumBlocks(static_cast<int>(dataSize), blockSize);
 
-    GPUInfo::calculateNumBlocks(static_cast<int>(dataSize), blockSize);
+    numBlocks = std::max(numBlocks, minGridSize);
 }
 
 __global__ void countClassesKernel(int* classCounts, const int* labels, const size_t numSamples)
